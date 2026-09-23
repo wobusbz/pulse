@@ -1,0 +1,17 @@
+[package]
+name = "pulse"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sysinfo = "0.39.6"
+
+gpui-kit = "0.6.6"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+raw-window-handle = "0.6.2"
+windows = { version = "0.57.0", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_System_Performance", "Win32_System_Registry", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+metal = "0.33"
+core-foundation = "0.10"
