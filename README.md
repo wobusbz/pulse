@@ -57,6 +57,10 @@
 | **便携版** | `Pulse-0.1.0-windows-x64-portable.zip` | 解压即用，含 `Pulse.exe` + `lib\` + `assets\` |
 | **单独 exe** | `Pulse-0.1.0-windows-x64.exe` | 只下主程序。**需自行把 `lib\LhmNative.dll` 放到它旁边**，否则启动后没有数据 |
 
+<p align="center">
+  <img src="docs/screenshot-installer.png" alt="安装向导" width="420">
+</p>
+
 > 其它平台（如 `linux-x64` / `linux-arm64` / `macos-arm64`）待适配；命名沿用同一约定。
 
 安装 / 解压后的目录结构：
