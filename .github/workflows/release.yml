@@ -33,16 +33,34 @@ jobs:
         shell: cmd
         run: installer\build.bat
 
-      - name: Upload artifact
+      # Portable build: Pulse.exe + lib/ + assets/, zipped for a self-contained download.
+      - name: Package portable
+        shell: pwsh
+        run: |
+          $out = "dist/Pulse"
+          New-Item -ItemType Directory -Force -Path "$out/lib", "$out/assets" | Out-Null
+          Copy-Item target/release/Pulse.exe "$out/"
+          Copy-Item lib/LhmNative.dll "$out/lib/"
+          Copy-Item lib/PawnIO_setup.exe "$out/lib/"
+          Copy-Item installer/pulse.ico "$out/assets/"
+          Compress-Archive -Path $out -DestinationPath dist/Pulse-portable.zip -Force
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PulseSetup
-          path: installer/PulseSetup.exe
+          name: Pulse
+          path: |
+            dist/Pulse-portable.zip
+            installer/PulseSetup.exe
+            target/release/Pulse.exe
           if-no-files-found: error
 
       - name: Publish GitHub release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: installer/PulseSetup.exe
+          files: |
+            dist/Pulse-portable.zip
+            installer/PulseSetup.exe
+            target/release/Pulse.exe
           generate_release_notes: true

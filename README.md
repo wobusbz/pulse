@@ -47,15 +47,17 @@
 > 安装包会自带 `PawnIO_setup.exe`，仅在系统未安装时**提权安装一次**。
 > 内存温度还取决于内存条是否带温度传感器（多数消费级 DDR4/DDR5 没有）。
 
-## 安装
+## 安装 / 下载
 
-从 [Releases](../../releases) 下载 `PulseSetup.exe` 运行即可。
+[Releases](../../releases) 提供三种：
 
-- 安装到 `%LOCALAPPDATA%\Programs\Pulse`（**用户级，默认不需要管理员**；只有首次安装 PawnIO 驱动时会弹一次 UAC）
-- 创建开始菜单 / 桌面快捷方式，并默认加入开机自启动
-- 自带卸载程序；卸载**不会**移除 PawnIO（其它软件可能也在用）
+| 方式 | 文件 | 说明 |
+| --- | --- | --- |
+| **安装包**（推荐） | `PulseSetup.exe` | 装到 `%LOCALAPPDATA%\Programs\Pulse`，建开始菜单/桌面快捷方式、默认开机自启、自带卸载程序。用户级，**默认不需要管理员**，仅首次装 PawnIO 驱动时弹一次 UAC |
+| **便携版** | `Pulse-portable.zip` | 解压即用，含 `Pulse.exe` + `lib\` + `assets\` |
+| **单独 exe** | `Pulse.exe` | 只下主程序。**需自行把 `lib\LhmNative.dll` 放到它旁边**，否则启动后没有数据 |
 
-安装后的目录结构：
+安装 / 解压后的目录结构：
 
 ```
 Pulse\
