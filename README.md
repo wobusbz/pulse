@@ -49,13 +49,15 @@
 
 ## 安装 / 下载
 
-[Releases](../../releases) 提供三种：
+[Releases](../../releases) 提供三种。发布产物按 `Pulse-<版本>-<平台>-<类型>` 命名（当前平台为 `windows-x64`）：
 
 | 方式 | 文件 | 说明 |
 | --- | --- | --- |
-| **安装包**（推荐） | `PulseSetup.exe` | 装到 `%LOCALAPPDATA%\Programs\Pulse`，建开始菜单/桌面快捷方式、默认开机自启、自带卸载程序。用户级，**默认不需要管理员**，仅首次装 PawnIO 驱动时弹一次 UAC |
-| **便携版** | `Pulse-portable.zip` | 解压即用，含 `Pulse.exe` + `lib\` + `assets\` |
-| **单独 exe** | `Pulse.exe` | 只下主程序。**需自行把 `lib\LhmNative.dll` 放到它旁边**，否则启动后没有数据 |
+| **安装包**（推荐） | `Pulse-0.1.0-windows-x64-Setup.exe` | 装到 `%LOCALAPPDATA%\Programs\Pulse`，建开始菜单/桌面快捷方式、默认开机自启、自带卸载程序。用户级，**默认不需要管理员**，仅首次装 PawnIO 驱动时弹一次 UAC |
+| **便携版** | `Pulse-0.1.0-windows-x64-portable.zip` | 解压即用，含 `Pulse.exe` + `lib\` + `assets\` |
+| **单独 exe** | `Pulse-0.1.0-windows-x64.exe` | 只下主程序。**需自行把 `lib\LhmNative.dll` 放到它旁边**，否则启动后没有数据 |
+
+> 其它平台（如 `linux-x64` / `linux-arm64` / `macos-arm64`）待适配；命名沿用同一约定。
 
 安装 / 解压后的目录结构：
 
@@ -76,7 +78,7 @@ Pulse\
 
 ```bat
 cargo build --release          :: 产物 target\release\Pulse.exe
-installer\build.bat            :: 用 NSIS 打包，产物 installer\PulseSetup.exe
+installer\build.bat            :: 用 NSIS 打包，产物 installer\Pulse-<版本>-windows-x64-Setup.exe
 ```
 
 `installer\build.bat` 会依次找 `C:\Program Files (x86)\NSIS\makensis.exe` 和 PATH 里的 `makensis`。

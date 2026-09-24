@@ -4,13 +4,15 @@
 !define APP_NAME "Pulse"
 !define APP_DESC "任务栏系统监控"
 !define APP_VERSION "0.1.0"
+; 平台标识，发布产物名会带上它；将来适配其它平台时改成 linux-x64 / linux-arm64 / macos-arm64 等
+!define APP_TARGET "windows-x64"
 !define APP_PUBLISHER "Pulse"
 !define APP_EXE "Pulse.exe"
 !define APP_KEY "Pulse"
 
 Name "${APP_NAME} ${APP_VERSION}"
-BrandingText "${APP_NAME} ${APP_VERSION}"
-OutFile "PulseSetup.exe"
+BrandingText "${APP_NAME} ${APP_VERSION} (${APP_TARGET})"
+OutFile "Pulse-${APP_VERSION}-${APP_TARGET}-Setup.exe"
 InstallDir "$LOCALAPPDATA\Programs\${APP_NAME}"
 InstallDirRegKey HKCU "Software\${APP_KEY}" "InstallDir"
 RequestExecutionLevel user

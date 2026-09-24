@@ -29,30 +29,35 @@ jobs:
       - name: Build
         run: cargo build --release
 
+      # Produces installer/Pulse-<version>-<target>-Setup.exe (name defined in pulse.nsi)
       - name: Package installer
         shell: cmd
         run: installer\build.bat
 
-      # Portable build: Pulse.exe + lib/ + assets/, zipped for a self-contained download.
+      # Portable bundle named after the installer, e.g. Pulse-0.1.0-windows-x64-portable.zip
       - name: Package portable
         shell: pwsh
         run: |
-          $out = "dist/Pulse"
+          $setup = Get-ChildItem installer/Pulse-*-Setup.exe | Select-Object -First 1
+          if (-not $setup) { throw "installer not found in installer/" }
+          $prefix = $setup.BaseName -replace '-Setup$', ''
+          $out = "dist/$prefix"
           New-Item -ItemType Directory -Force -Path "$out/lib", "$out/assets" | Out-Null
           Copy-Item target/release/Pulse.exe "$out/"
           Copy-Item lib/LhmNative.dll "$out/lib/"
           Copy-Item lib/PawnIO_setup.exe "$out/lib/"
           Copy-Item installer/pulse.ico "$out/assets/"
-          Compress-Archive -Path $out -DestinationPath dist/Pulse-portable.zip -Force
+          Compress-Archive -Path $out -DestinationPath "dist/$prefix-portable.zip" -Force
+          Copy-Item target/release/Pulse.exe "dist/$prefix.exe"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Pulse
+          name: Pulse-windows-x64
           path: |
-            dist/Pulse-portable.zip
-            installer/PulseSetup.exe
-            target/release/Pulse.exe
+            installer/Pulse-*-Setup.exe
+            dist/*-portable.zip
+            dist/*.exe
           if-no-files-found: error
 
       - name: Publish GitHub release
@@ -60,7 +65,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/Pulse-portable.zip
-            installer/PulseSetup.exe
-            target/release/Pulse.exe
+            installer/Pulse-*-Setup.exe
+            dist/*-portable.zip
+            dist/*.exe
           generate_release_notes: true

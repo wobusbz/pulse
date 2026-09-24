@@ -32,7 +32,7 @@ echo.
 echo ============================================
 echo  OK
 echo    target\release\Pulse.exe
-echo    installer\PulseSetup.exe
+echo    installer\Pulse-*-Setup.exe
 echo ============================================
 exit /b 0
 
