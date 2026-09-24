@@ -66,14 +66,13 @@ impl TaskbarWidget {
             return;
         }
 
-        if let Some(panel) = self.panel.take() {
-            if panel
+        if let Some(panel) = self.panel.take()
+            && panel
                 .update(cx, |_, window, _| window.remove_window())
                 .is_ok()
-            {
-                cx.notify();
-                return;
-            }
+        {
+            cx.notify();
+            return;
         }
 
         #[cfg(target_os = "windows")]

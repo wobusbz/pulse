@@ -1,6 +1,6 @@
-//！“LhmNative.dll”（LibreHardwareMonitor）封装。
+//!“LhmNative.dll”（LibreHardwareMonitor）封装。
 //!
-//！通过LhmNative.dll 导出windows的硬件信息，导出的格式JSON
+//!通过LhmNative.dll 导出windows的硬件信息，导出的格式JSON
 #![allow(dead_code)]
 
 use crate::internal::lhm::model::Summary;

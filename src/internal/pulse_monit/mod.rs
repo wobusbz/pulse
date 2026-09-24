@@ -1,3 +1,3 @@
-pub(crate) mod pulse_monit;
+pub(crate) mod collector;
 
-pub(crate) use pulse_monit::PulseMonit;
+pub(crate) use collector::PulseMonit;

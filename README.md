@@ -81,6 +81,12 @@ installer\build.bat            :: 用 NSIS 打包，产物 installer\PulseSetup.
 
 `installer\build.bat` 会依次找 `C:\Program Files (x86)\NSIS\makensis.exe` 和 PATH 里的 `makensis`。
 
+一键跑完整流程（与 CI / 发布相同：fmt → check → clippy → test → build → 打包）：
+
+```bat
+scripts\verify.bat
+```
+
 调试 / 测试：
 
 ```bat

@@ -1,3 +1,3 @@
-pub(crate) mod autostart;
+pub(crate) mod registry;
 
-pub(crate) use autostart::{is_enabled, set_enabled};
+pub(crate) use registry::{is_enabled, set_enabled};
