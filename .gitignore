@@ -1,4 +1,13 @@
+# 构建产物
 /target
-/.omo
 /dist
+
+# 生成的安装包（CI 打包产出）
 /installer/Pulse-*-Setup.exe
+
+# 仅本地使用、CI 用不到的辅助脚本
+/installer/shot.ps1
+/scripts/
+
+# 会话/工具目录
+/.omo
