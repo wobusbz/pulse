@@ -19,5 +19,5 @@
 - 安装包随包携带 PawnIO 驱动安装器，系统未安装时以管理员权限静默安装
 - GitHub Actions：CI（fmt / check / clippy / test / build）与 Release（打 tag 触发打包发布）
 
-[Unreleased]: https://github.com/OWNER/pulse/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/OWNER/pulse/releases/tag/v0.1.0
+[Unreleased]: https://github.com/wobusbz/pulse/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/wobusbz/pulse/releases/tag/v0.1.0

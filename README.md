@@ -1,6 +1,6 @@
 # Pulse · 任务栏系统监控
 
-![CI](https://github.com/OWNER/pulse/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/wobusbz/pulse/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-0078D6)
 
