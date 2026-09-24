@@ -78,7 +78,7 @@ Pulse\
 
 ## 从源码构建
 
-需要 **Rust stable（≥ 1.85，因 edition 2024）** 与 Windows MSVC 工具链。
+需要 **Rust stable（≥ 1.88：edition 2024 + let-chains）** 与 Windows MSVC 工具链。
 
 ```bat
 cargo build --release          :: 产物 target\release\Pulse.exe
@@ -129,7 +129,7 @@ docs/                           README 截图
 | [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) | MPL-2.0 | `lib/LhmNative.dll` 内含 LibreHardwareMonitorLib |
 | [PawnIO](https://pawnio.eu) | 见上游 | `lib/PawnIO_setup.exe`（namazso 签名） |
 
-再分发前请确认各自的许可条款。
+再分发前请确认各自的许可条款，详见 [THIRD-PARTY.md](THIRD-PARTY.md)。
 
 ## License
 
