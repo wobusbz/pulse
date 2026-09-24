@@ -42,12 +42,24 @@ Section "Install"
   CreateDirectory "$INSTDIR\lib"
   SetOutPath "$INSTDIR\lib"
   File "..\lib\LhmNative.dll"
+  File "..\lib\PawnIO_setup.exe"
 
   CreateDirectory "$INSTDIR\assets"
   SetOutPath "$INSTDIR\assets"
   File "pulse.ico"
 
   SetOutPath "$INSTDIR"
+
+  ; 传感器驱动 PawnIO：没有才装（需要管理员，会弹一次 UAC）。
+  ; 它是 CPU 封装温度与内存 (SPD) 温度的数据来源。
+  ReadRegStr $0 HKLM "SYSTEM\CurrentControlSet\Services\PawnIO" "ImagePath"
+  StrCmp $0 "" 0 pawnio_done
+    DetailPrint "安装 PawnIO 传感器驱动（需要管理员权限）..."
+    ClearErrors
+    ExecShellWait "runas" "$INSTDIR\lib\PawnIO_setup.exe" "-install -silent"
+    IfErrors 0 pawnio_done
+      DetailPrint "PawnIO 未安装（已取消或权限不足），CPU / 内存温度将显示 —。"
+  pawnio_done:
 
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
   CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\assets\pulse.ico" 0
@@ -72,6 +84,7 @@ SectionEnd
 Section "Uninstall"
   Delete "$INSTDIR\${APP_EXE}"
   Delete "$INSTDIR\lib\LhmNative.dll"
+  Delete "$INSTDIR\lib\PawnIO_setup.exe"
   Delete "$INSTDIR\assets\pulse.ico"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR\lib"

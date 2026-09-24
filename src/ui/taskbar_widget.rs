@@ -4,6 +4,7 @@ use std::time::Duration;
 use crate::internal::pulse_monit::PulseMonit;
 use crate::ui::ExpandPanel;
 use gpui_kit::assets::IconName;
+use gpui_kit::component::spinner::Spinner;
 use gpui_kit::component::{ActiveTheme, Icon, Sizable, Theme, h_flex, v_flex};
 use gpui_kit::*;
 
@@ -60,6 +61,11 @@ impl TaskbarWidget {
     }
 
     fn toggle(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // 传感器还没初始化完之前，不展开详情面板。
+        if !self.monitor.snapshot().ready {
+            return;
+        }
+
         if let Some(panel) = self.panel.take() {
             if panel
                 .update(cx, |_, window, _| window.remove_window())
@@ -134,6 +140,19 @@ impl Render for TaskbarWidget {
         let rest_bg = cx.theme().popover.opacity(0.55);
         let hover_bg = cx.theme().popover.opacity(0.95);
 
+        // LHM 初始化要几秒；这期间只显示初始化状态，不显示指标，也不响应点击。
+        if !m.ready {
+            return h_flex()
+                .items_center()
+                .gap_2()
+                .px_3()
+                .rounded(cx.theme().radius_lg)
+                .bg(rest_bg)
+                .child(Spinner::new().small().color(muted))
+                .child(div().text_sm().text_color(muted).child("正在初始化…"))
+                .into_any_element();
+        }
+
         h_flex()
             .id("taskbar-monitor")
             .items_center()
@@ -155,19 +174,19 @@ impl Render for TaskbarWidget {
                             .gap_2()
                             .child(metric(
                                 IconName::Cpu,
-                                format!("{:.0}%", m.cpu_usage),
+                                percent(m.ready, m.cpu_usage),
                                 cpu_usage,
                                 muted,
                             ))
                             .child(metric(
                                 IconName::MemoryStick,
-                                format!("{:.0}%", m.memory_usage),
+                                percent(m.ready, m.memory_usage),
                                 memory_usage,
                                 muted,
                             ))
                             .child(metric(
                                 IconName::HardDrive,
-                                format!("{:.0}%", m.disk_activity),
+                                percent(m.ready, m.disk_activity),
                                 disk_activity,
                                 muted,
                             )),
@@ -177,24 +196,25 @@ impl Render for TaskbarWidget {
                             .gap_2()
                             .child(metric(
                                 IconName::Thermometer,
-                                fmt_temp(m.cpu_temperature),
+                                fmt_temp(m.ready, m.cpu_temperature),
                                 cpu_temp,
                                 muted,
                             ))
                             .child(metric(
                                 IconName::ThermometerSnowflake,
-                                fmt_temp(m.memory_temperature),
+                                fmt_temp(m.ready, m.memory_temperature),
                                 memory_temp,
                                 muted,
                             ))
                             .child(metric(
                                 IconName::Thermometer,
-                                fmt_temp(m.disk_temperature),
+                                fmt_temp(m.ready, m.disk_temperature),
                                 disk_temp,
                                 muted,
                             )),
                     ),
             )
+            .into_any_element()
     }
 }
 
@@ -213,11 +233,23 @@ fn metric(icon: IconName, value: String, value_color: Hsla, icon_color: Hsla) ->
         )
 }
 
-fn fmt_temp(celsius: f64) -> String {
+fn fmt_temp(ready: bool, celsius: f64) -> String {
+    if !ready {
+        return "…".to_string();
+    }
     if celsius > 0.0 {
         format!("{celsius:.0}°")
     } else {
         "—".to_string()
+    }
+}
+
+/// Percentage cell; `…` until the first sensor snapshot arrives.
+fn percent(ready: bool, value: f64) -> String {
+    if ready {
+        format!("{value:.0}%")
+    } else {
+        "…".to_string()
     }
 }
 

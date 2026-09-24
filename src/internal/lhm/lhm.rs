@@ -195,7 +195,10 @@ unsafe fn take_string(get: unsafe extern "C" fn() -> *mut c_char, free: FreeFn) 
 mod tests {
     use super::*;
 
+    /// 需要本机装有 PawnIO 驱动并具备真实传感器，CI 上默认跳过。
+    /// 本地验证：`cargo test test_lhm -- --ignored --nocapture`
     #[test]
+    #[ignore = "needs Windows + PawnIO driver + real hardware sensors"]
     fn test_lhm() {
         let lhm = Lhm::load(crate::internal::lhm::dll_path())
             .unwrap_or_else(|err| panic!("加载 dll 失败: {err}"));

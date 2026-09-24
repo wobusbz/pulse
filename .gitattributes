@@ -1,0 +1,8 @@
+* text=auto
+
+# third-party / binary assets
+*.dll binary
+*.exe binary
+*.ico binary
+*.bmp binary
+*.png binary

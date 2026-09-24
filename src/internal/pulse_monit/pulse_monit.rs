@@ -31,6 +31,8 @@ pub(crate) struct Metrics {
     pub disk_read_bytes: u64,
     /// 硬盘的写入
     pub disk_write_bytes: u64,
+    /// 是否已经拿到第一份传感器快照。LHM 初始化需要几秒，在此之前界面应显示加载中。
+    pub ready: bool,
 }
 
 impl Metrics {
@@ -86,6 +88,7 @@ impl Metrics {
             disk_activity: f64::from(disk_activity),
             disk_read_bytes: disk_read.max(0.0) as u64,
             disk_write_bytes: disk_write.max(0.0) as u64,
+            ready: true,
         }
     }
 }

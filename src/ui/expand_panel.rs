@@ -101,7 +101,7 @@ impl Render for ExpandPanel {
                         IconName::Thermometer,
                         "CPU 温度",
                         fmt_temp(m.cpu_temperature),
-                        Some(m.cpu_temperature),
+                        temp_bar(m.cpu_temperature),
                         m.cpu_temperature >= 80.0,
                         cx,
                     ))
@@ -119,7 +119,7 @@ impl Render for ExpandPanel {
                         IconName::Thermometer,
                         "GPU 温度",
                         fmt_temp(m.gpu_temperature),
-                        Some(m.gpu_temperature),
+                        temp_bar(m.gpu_temperature),
                         m.gpu_temperature >= 80.0,
                         cx,
                     ))
@@ -146,7 +146,7 @@ impl Render for ExpandPanel {
                         IconName::ThermometerSnowflake,
                         "内存温度",
                         fmt_temp(m.memory_temperature),
-                        Some(m.memory_temperature),
+                        temp_bar(m.memory_temperature),
                         m.memory_temperature >= 80.0,
                         cx,
                     ))
@@ -155,7 +155,7 @@ impl Render for ExpandPanel {
                         IconName::HardDrive,
                         "硬盘温度",
                         fmt_temp(m.disk_temperature),
-                        Some(m.disk_temperature),
+                        temp_bar(m.disk_temperature),
                         m.disk_temperature >= 60.0,
                         cx,
                     ))
@@ -242,6 +242,12 @@ fn fmt_temp(celsius: f64) -> String {
     } else {
         "—".to_string()
     }
+}
+
+/// Progress value for a temperature gauge: `None` (no bar) when the sensor is
+/// unavailable, so a missing reading does not render as an empty 0% bar.
+fn temp_bar(celsius: f64) -> Option<f64> {
+    (celsius > 0.0).then_some(celsius)
 }
 
 fn fmt_vram(used: u64, total: u64) -> String {
