@@ -1,0 +1,42 @@
+# cargo-deny 配置（依赖许可与安全审计）。
+#
+# 用法：
+#   cargo install cargo-deny --locked
+#   cargo deny check
+#
+# 注意：它只覆盖 Cargo 依赖；随包分发的二进制（lib/LhmNative.dll、lib/PawnIO_setup.exe）
+# 不在其范围内，相关许可见 THIRD-PARTY.md。
+
+[graph]
+targets = [
+    { triple = "x86_64-pc-windows-msvc" },
+]
+
+[advisories]
+version = 2
+ignore = []
+
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+    "0BSD",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

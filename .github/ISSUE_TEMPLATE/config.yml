@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 安全漏洞（勿公开）
+    url: https://github.com/OWNER/pulse/security/advisories/new
+    about: 请使用私密漏洞上报，详见 SECURITY.md
+  - name: 讨论 / 提问
+    url: https://github.com/OWNER/pulse/discussions
+    about: 使用问题、想法交流请走 Discussions

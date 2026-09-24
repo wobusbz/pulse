@@ -1,0 +1,65 @@
+name: Bug 报告
+description: 反馈一个可复现的问题
+title: "[Bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请先搜索是否已有同类 issue。
+        **安全问题请勿开公开 issue**，改用私密漏洞上报（见 SECURITY.md）。
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 现象
+      description: 发生了什么？你期望的是什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Pulse 版本
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 系统 / 环境
+      placeholder: Windows 11 23H2 x64，缩放 125%
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pawnio
+    attributes:
+      label: 是否已安装 PawnIO 驱动？
+      description: CPU / 内存温度依赖它（安装包会按需自动安装）
+      options:
+        - "是"
+        - "否"
+        - 不确定
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 截图 / 日志 / 其它
+      description: UI 问题请附任务栏部件与详情面板的截图
+    validations:
+      required: false
