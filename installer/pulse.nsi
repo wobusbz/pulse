@@ -3,7 +3,10 @@
 
 !define APP_NAME "Pulse"
 !define APP_DESC "任务栏系统监控"
-!define APP_VERSION "0.1.0"
+; 版本号：默认值，可被 /DAPP_VERSION=... 覆盖（本地由 build.bat 从 Cargo.toml 读取，见 release.yml）
+!ifndef APP_VERSION
+  !define APP_VERSION "0.1.0"
+!endif
 ; 平台标识，发布产物名会带上它；将来适配其它平台时改成 linux-x64 / linux-arm64 / macos-arm64 等
 !define APP_TARGET "windows-x64"
 !define APP_PUBLISHER "Pulse"
