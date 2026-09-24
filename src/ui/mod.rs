@@ -1,3 +1,4 @@
+mod drag;
 mod expand_panel;
 mod metric_item;
 mod taskbar_widget;

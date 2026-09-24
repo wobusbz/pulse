@@ -1,3 +1,6 @@
+/// ! 主要TrafficMonitor 参考的这个软件的实现，调用windows的api，吧ui渲染到任务栏
+/// ! Github地址 https://github.com/zhongyang219/TrafficMonitor.git
+/// !
 use gpui_kit::Window;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use windows::Win32::Foundation::{HWND, POINT, RECT};
@@ -5,10 +8,9 @@ use windows::Win32::Graphics::Gdi::MapWindowPoints;
 use windows::Win32::UI::WindowsAndMessaging::{
     FindWindowExW, FindWindowW, GWL_EXSTYLE, GWL_STYLE, GetClientRect, GetParent,
     GetWindowLongPtrW, GetWindowRect, HWND_TOP, IsWindow, SWP_FRAMECHANGED, SWP_NOACTIVATE,
-    SWP_NOZORDER, SWP_SHOWWINDOW, SetParent, SetWindowLongPtrW, SetWindowPos, WS_CAPTION,
-    WS_CHILD, WS_EX_CLIENTEDGE, WS_EX_DLGMODALFRAME, WS_EX_STATICEDGE, WS_EX_TOOLWINDOW,
-    WS_EX_TOPMOST, WS_EX_WINDOWEDGE, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_POPUP, WS_SYSMENU,
-    WS_THICKFRAME,
+    SWP_NOZORDER, SWP_SHOWWINDOW, SetParent, SetWindowLongPtrW, SetWindowPos, WS_CAPTION, WS_CHILD,
+    WS_EX_CLIENTEDGE, WS_EX_DLGMODALFRAME, WS_EX_STATICEDGE, WS_EX_TOOLWINDOW, WS_EX_TOPMOST,
+    WS_EX_WINDOWEDGE, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_POPUP, WS_SYSMENU, WS_THICKFRAME,
 };
 use windows::core::w;
 
@@ -17,10 +19,6 @@ const HEIGHT: f32 = 40.0;
 const TASKBAR_GAP: i32 = 4;
 const TASKBAR_V_MARGIN: i32 = 3;
 
-/// Window styles that create non-client chrome (caption / border / frame).
-/// They must be removed so the client area fills the whole widget window,
-/// otherwise GPUI only draws inside the inset client area and the widget is
-/// left clipped and top-aligned.
 const NON_CLIENT_STYLE: u32 = WS_POPUP.0
     | WS_CAPTION.0
     | WS_THICKFRAME.0
@@ -28,7 +26,6 @@ const NON_CLIENT_STYLE: u32 = WS_POPUP.0
     | WS_MINIMIZEBOX.0
     | WS_MAXIMIZEBOX.0;
 
-/// Extended window styles that add a non-client edge or resize frame.
 const NON_CLIENT_EX_STYLE: u32 = WS_EX_TOPMOST.0
     | WS_EX_WINDOWEDGE.0
     | WS_EX_CLIENTEDGE.0
@@ -39,8 +36,6 @@ fn center_offset(container: i32, child: i32) -> i32 {
     (container - child).max(0) / 2
 }
 
-/// Shrinks the desired widget height so it always leaves a small margin inside
-/// the taskbar, keeping the widget visibly centered vertically.
 fn fitted_height(desired: i32, taskbar_height: i32) -> i32 {
     desired.min((taskbar_height - 2 * TASKBAR_V_MARGIN).max(1))
 }
@@ -158,8 +153,6 @@ fn position_in_taskbar(widget: HWND, taskbar: HWND) -> Result<(), String> {
     let client_height = client.bottom - client.top;
     let horizontal = client.right - client.left >= client_height;
 
-    // Keep the widget slightly shorter than the taskbar so it stays visibly
-    // centered vertically instead of filling the whole taskbar height.
     let desired_height = (HEIGHT * scale).round() as i32;
     let height = fitted_height(desired_height, client_height);
     let y = client.top + center_offset(client_height, height);

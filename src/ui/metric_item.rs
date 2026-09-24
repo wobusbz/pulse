@@ -3,9 +3,6 @@ use gpui_kit::component::progress::Progress;
 use gpui_kit::component::{ActiveTheme, Icon, Sizable, h_flex, v_flex};
 use gpui_kit::*;
 
-/// Renders a single metric: an icon and label on the leading edge, the value on
-/// the trailing edge, and — when a percentage applies — a thin progress bar
-/// underneath. `warn` switches both the value and the bar to the danger token.
 pub(crate) fn metric_item(
     id: &'static str,
     icon: IconName,

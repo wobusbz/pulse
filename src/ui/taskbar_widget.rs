@@ -31,7 +31,6 @@ impl TaskbarWidget {
             None
         });
 
-        // Re-render the widget once per second to reflect fresh metrics.
         cx.spawn(async move |this, cx| {
             loop {
                 cx.background_executor().timer(Duration::from_secs(1)).await;
@@ -62,8 +61,6 @@ impl TaskbarWidget {
 
     fn toggle(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         if let Some(panel) = self.panel.take() {
-            // Close the currently open panel. If it has already dismissed itself
-            // (lost activation), fall through so this click reopens it.
             if panel
                 .update(cx, |_, window, _| window.remove_window())
                 .is_ok()
@@ -73,7 +70,6 @@ impl TaskbarWidget {
             }
         }
 
-        // Open the panel just above the widget, right-aligned.
         #[cfg(target_os = "windows")]
         let widget = self
             .taskbar_hwnd
@@ -105,8 +101,16 @@ impl Render for TaskbarWidget {
         let muted = cx.theme().muted_foreground;
         let danger = cx.theme().danger;
         let foreground = cx.theme().foreground;
-        let cpu_usage = if m.cpu_usage >= 80.0 { danger } else { foreground };
-        let cpu_temp = if m.cpu_temperature >= 80.0 { danger } else { foreground };
+        let cpu_usage = if m.cpu_usage >= 80.0 {
+            danger
+        } else {
+            foreground
+        };
+        let cpu_temp = if m.cpu_temperature >= 80.0 {
+            danger
+        } else {
+            foreground
+        };
         let memory_usage = if m.memory_usage >= 90.0 {
             danger
         } else {
@@ -194,8 +198,6 @@ impl Render for TaskbarWidget {
     }
 }
 
-/// One metric cell: a small icon beside its value, sharing a fixed column lane
-/// so the two rows line up.
 fn metric(icon: IconName, value: String, value_color: Hsla, icon_color: Hsla) -> impl IntoElement {
     h_flex()
         .flex_1()
@@ -232,7 +234,7 @@ fn panel_window_options(bounds: Bounds<Pixels>) -> WindowOptions {
         kind: WindowKind::PopUp,
         focus: true,
         show: true,
-        is_movable: false,
+        is_movable: true,
         is_resizable: false,
         is_minimizable: false,
         window_background: WindowBackgroundAppearance::Transparent,

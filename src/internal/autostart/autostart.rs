@@ -1,7 +1,6 @@
-//! Launch-at-sign-in support, backed by the per-user `Run` registry key.
+//！在登录支持时启动，由每个用户的“Run”注册表项支持。
 //!
-//! This is the same mechanism the installer uses, so the app can also turn it
-//! on or off from its own UI.
+//！这与安装程序使用的机制相同，因此应用程序也可以将其打开
 
 #[cfg(target_os = "windows")]
 mod windows_impl {
@@ -9,8 +8,8 @@ mod windows_impl {
 
     use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_SUCCESS};
     use windows::Win32::System::Registry::{
-        HKEY, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_SAM_FLAGS, REG_SZ, RegCloseKey,
-        RegDeleteValueW, RegOpenKeyExW, RegQueryValueExW, RegSetValueExW,
+        HKEY, HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE, REG_SAM_FLAGS, REG_SZ,
+        RegCloseKey, RegDeleteValueW, RegOpenKeyExW, RegQueryValueExW, RegSetValueExW,
     };
     use windows::core::{PCWSTR, w};
 

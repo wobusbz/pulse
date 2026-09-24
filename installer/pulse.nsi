@@ -5,7 +5,7 @@
 !define APP_DESC "任务栏系统监控"
 !define APP_VERSION "0.1.0"
 !define APP_PUBLISHER "Pulse"
-!define APP_EXE "pulse.exe"
+!define APP_EXE "Pulse.exe"
 !define APP_KEY "Pulse"
 
 Name "${APP_NAME} ${APP_VERSION}"
@@ -38,12 +38,21 @@ SetCompressor /SOLID lzma
 Section "Install"
   SetOutPath "$INSTDIR"
   File "..\target\release\${APP_EXE}"
+
+  CreateDirectory "$INSTDIR\lib"
+  SetOutPath "$INSTDIR\lib"
+  File "..\lib\LhmNative.dll"
+
+  CreateDirectory "$INSTDIR\assets"
+  SetOutPath "$INSTDIR\assets"
   File "pulse.ico"
 
+  SetOutPath "$INSTDIR"
+
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
-  CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\pulse.ico" 0
+  CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\assets\pulse.ico" 0
   CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall ${APP_NAME}.lnk" "$INSTDIR\Uninstall.exe"
-  CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\pulse.ico" 0
+  CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\assets\pulse.ico" 0
 
   ; 任务栏常驻监控，装完默认开机自启动
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${APP_KEY}" "$INSTDIR\${APP_EXE}"
@@ -54,7 +63,7 @@ Section "Install"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "DisplayName" "${APP_NAME} - ${APP_DESC}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "DisplayVersion" "${APP_VERSION}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "Publisher" "${APP_PUBLISHER}"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "DisplayIcon" "$INSTDIR\pulse.ico"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "DisplayIcon" "$INSTDIR\${APP_EXE}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "UninstallString" "$INSTDIR\Uninstall.exe"
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_KEY}" "NoRepair" 1
@@ -62,8 +71,11 @@ SectionEnd
 
 Section "Uninstall"
   Delete "$INSTDIR\${APP_EXE}"
-  Delete "$INSTDIR\pulse.ico"
+  Delete "$INSTDIR\lib\LhmNative.dll"
+  Delete "$INSTDIR\assets\pulse.ico"
   Delete "$INSTDIR\Uninstall.exe"
+  RMDir "$INSTDIR\lib"
+  RMDir "$INSTDIR\assets"
   RMDir "$INSTDIR"
 
   Delete "$DESKTOP\${APP_NAME}.lnk"

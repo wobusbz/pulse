@@ -11,7 +11,6 @@ use gpui_kit::component::switch::Switch;
 use gpui_kit::component::{ActiveTheme, Sizable, h_flex, v_flex};
 use gpui_kit::*;
 
-/// The flyout panel shown above the taskbar widget.
 pub(crate) struct ExpandPanel {
     monitor: Arc<PulseMonit>,
     autostart: Rc<Cell<bool>>,
@@ -24,7 +23,6 @@ impl ExpandPanel {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
-        // Re-render the panel once per second to reflect fresh metrics.
         cx.spawn(async move |this, cx| {
             loop {
                 cx.background_executor().timer(Duration::from_secs(1)).await;
@@ -35,10 +33,6 @@ impl ExpandPanel {
         })
         .detach();
 
-        // Dismiss the flyout when it loses activation, i.e. the user clicked
-        // somewhere else. Defer the close briefly so a click on the widget can
-        // close the panel itself first — otherwise the two race and the widget
-        // click reopens the panel it just dismissed.
         let mut was_active = false;
         let activation_subscription = cx.observe_window_activation(window, move |_, window, cx| {
             let active = window.is_window_active();
@@ -85,7 +79,10 @@ impl Render for ExpandPanel {
                     .text_base()
                     .font_weight(FontWeight::SEMIBOLD)
                     .text_color(cx.theme().foreground)
-                    .child("系统监控"),
+                    .child("系统监控")
+                    .on_mouse_down(MouseButton::Left, |_, window, _| {
+                        super::drag::start_window_drag(window)
+                    }),
             )
             .child(
                 v_flex()
@@ -208,17 +205,11 @@ impl Render for ExpandPanel {
             )
             .child(
                 h_flex()
-                    .justify_between()
+                    .justify_end()
                     .items_center()
                     .border_t_1()
                     .border_color(cx.theme().border)
                     .pt_3()
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(cx.theme().muted_foreground)
-                            .child("刷新间隔 1s"),
-                    )
                     .child(
                         h_flex()
                             .gap_2()
@@ -257,8 +248,12 @@ fn fmt_vram(used: u64, total: u64) -> String {
     if total == 0 {
         return "—".to_string();
     }
-    const GIB: f64 = 1024.0 * 1024.0 * 1024.0;
-    format!("{:.1} / {:.0} GB", used as f64 / GIB, total as f64 / GIB)
+    const GIB: f64 = (1 << 30) as f64;
+    if used == 0 {
+        format!("{:.0} GB", total as f64 / GIB)
+    } else {
+        format!("{:.1} / {:.0} GB", used as f64 / GIB, total as f64 / GIB)
+    }
 }
 
 fn fmt_rate(bytes: u64) -> String {
