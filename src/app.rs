@@ -13,6 +13,10 @@ const WIDGET_HEIGHT: f32 = 40.0;
 const SCREEN_MARGIN: f32 = 8.0;
 
 pub fn run() {
+    // 先装 panic 日志：release 是 panic = "abort" 且无控制台，
+    // 没有它的话用户只能报「它崩了」。
+    crate::internal::diagnostics::install_panic_logger();
+
     gpui_kit::application()
         .with_assets(gpui_kit::assets::AllAssets)
         .run(move |cx| {

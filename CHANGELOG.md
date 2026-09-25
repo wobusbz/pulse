@@ -6,6 +6,19 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **拖动详情面板导致进程静默崩溃**。拖动标题时用 `SendMessageW` 同步启动了 Windows 的模态移动循环，
+  而它是在 GPUI 事件回调内执行的（此时 `App` 仍被可变借用）。模态循环抽消息时跑到了面板的 1 秒刷新定时器，
+  其 `Entity::update` 去 `AppCell::borrow_mut()` 撞上未释放的借用，panic `RefCell already borrowed`；
+  release 是 `panic = "abort"`，因此表现为无提示崩溃（事件日志 `0xc0000409` / `FAST_FAIL_FATAL_APP_EXIT`）。
+  改用 `PostMessageW`，把模态循环推迟到回调返回、借用释放之后进入。
+
+### Added
+
+- panic 会写入 `%LOCALAPPDATA%\Pulse\panic.log`（位置 + 消息）。此前 release 同时是 `panic = "abort"`
+  和 GUI 子系统（无控制台），panic 信息完全丢失，崩溃无从回报。
+
 ## [0.1.0] - 2026-09-25
 
 ### Added
