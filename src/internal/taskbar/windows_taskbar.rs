@@ -50,7 +50,15 @@ pub(crate) fn taskbar_height() -> Option<f32> {
     (dpi > 0).then_some(HEIGHT)
 }
 
-pub(crate) fn embed(window: &mut Window) -> Option<isize> {
+/// 取得 GPUI 窗口的 HWND，并尝试把它挂进任务栏。
+///
+/// 即使**这次**挂载失败也返回 HWND（例如任务栏此刻还不存在、或正在被重建）——
+/// 调用方每秒调用 [`maintain`] 重试，任务栏回来后会自动重新接上。
+/// 只有拿不到原生窗口句柄才算真正失败。
+///
+/// 这里刻意**不**主动退出进程：早先的写法是失败即 `cx.quit()`，结果任务栏一重建
+/// 整个监控就没了；现在由守护任务负责恢复。
+pub(crate) fn attach(window: &mut Window) -> Option<isize> {
     let raw = match HasWindowHandle::window_handle(window) {
         Ok(handle) => handle.as_raw(),
         Err(error) => {
@@ -63,13 +71,10 @@ pub(crate) fn embed(window: &mut Window) -> Option<isize> {
         return None;
     };
     let widget = HWND(handle.hwnd.get());
-    match set_taskbar_parent(widget) {
-        Ok(()) => Some(widget.0),
-        Err(error) => {
-            eprintln!("Unable to embed the monitor into the Windows taskbar: {error}");
-            None
-        }
+    if let Err(error) = set_taskbar_parent(widget) {
+        eprintln!("Unable to embed the monitor into the Windows taskbar (will retry): {error}");
     }
+    Some(widget.0)
 }
 
 pub(crate) fn maintain(widget_handle: isize) {

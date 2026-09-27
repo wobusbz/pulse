@@ -16,8 +16,21 @@
 
 ### Added
 
+- 部件窗口守护任务：任务栏重建（Explorer 重启、切换自动隐藏、改 DPI/分辨率、插拔显示器…）后
+  自动把部件重建并重新挂回任务栏，约 1 秒内恢复。它是**应用级任务**，不挂在任何窗口上，
+  所以部件窗口被逻辑销毁后它依然存活；传感器线程由 `Arc<PulseMonit>` 持有，
+  重建时复用同一实例，恢复是即时的。
 - panic 会写入 `%LOCALAPPDATA%\Pulse\panic.log`（位置 + 消息）。此前 release 同时是 `panic = "abort"`
   和 GUI 子系统（无控制台），panic 信息完全丢失，崩溃无从回报。
+
+### Changed
+
+- 退出策略改为 `QuitMode::Explicit`。部件窗口是 `Shell_TrayWnd` 的**子窗口**，任务栏被销毁重建时
+  子窗口会被连带销毁；gpui 默认的 `LastWindowClosed` 会因此结束**整个进程** —— 表现为
+  「跑一段时间后进程静默消失」（exit code 0，无崩溃事件、无内存耗尽事件，所以极难定位）。
+  现在只有显式的退出按钮 / Alt+F4 才结束进程。
+- `internal/taskbar`：`embed` 改名为 `attach`，首次挂载失败不再 `quit`，而是交给每秒一次的
+  `maintain` 重试（任务栏尚未就绪时会自动接上）。
 
 ## [0.1.0] - 2026-09-25
 

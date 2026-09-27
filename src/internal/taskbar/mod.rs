@@ -2,4 +2,4 @@
 pub(crate) mod windows_taskbar;
 
 #[cfg(target_os = "windows")]
-pub(crate) use windows_taskbar::{embed, maintain, screen_bounds, taskbar_height};
+pub(crate) use windows_taskbar::{attach, maintain, screen_bounds, taskbar_height};

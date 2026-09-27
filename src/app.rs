@@ -1,8 +1,10 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use gpui_kit::component::Theme;
 use gpui_kit::{actions, *};
 
+use crate::internal::diagnostics::diagnostics::install_panic_logger;
 use crate::internal::pulse_monit::PulseMonit;
 use crate::ui::TaskbarWidget;
 
@@ -12,13 +14,27 @@ const WIDGET_WIDTH: f32 = 205.0;
 const WIDGET_HEIGHT: f32 = 40.0;
 const SCREEN_MARGIN: f32 = 8.0;
 
+/// 检查部件是否还活着、需要时把它重建出来的间隔。
+const WIDGET_RECOVERY_INTERVAL: Duration = Duration::from_secs(1);
+
 pub fn run() {
     // 先装 panic 日志：release 是 panic = "abort" 且无控制台，
     // 没有它的话用户只能报「它崩了」。
-    crate::internal::diagnostics::install_panic_logger();
+    install_panic_logger();
 
     gpui_kit::application()
         .with_assets(gpui_kit::assets::AllAssets)
+        // 任务栏部件是 `Shell_TrayWnd` 的**子窗口**，而任务栏会被销毁重建
+        // （Explorer 重启、切换「自动隐藏任务栏」、改 DPI / 分辨率、插拔显示器、
+        // Windows 更新…）。父窗口一销毁，子窗口会被连带销毁。
+        //
+        // gpui 的默认策略 `LastWindowClosed` 会让**整个进程**在最后一个窗口关闭时
+        // 退出 —— 用户看到的就是「跑了一段时间，进程静默消失」（exit code 0，
+        // 没有崩溃事件、也没有内存耗尽事件，所以之前无从定位）。
+        //
+        // 改成 `Explicit`：只有显式的 `App::quit`（退出按钮 / Alt+F4）才结束进程，
+        // 好让下面的守护任务把部件重建出来。
+        .with_quit_mode(QuitMode::Explicit)
         .run(move |cx| {
             gpui_kit::init(cx);
             cx.bind_keys([
@@ -29,14 +45,51 @@ pub fn run() {
             ]);
             cx.on_action(|_: &Quit, cx: &mut App| cx.quit());
 
-            let monitor = Arc::new(PulseMonit::new());
-            let bounds = widget_bounds(cx);
-            cx.open_window(widget_window_options(bounds), move |window, cx| {
-                Theme::sync_system_appearance(Some(window), cx);
-                cx.new(move |cx| TaskbarWidget::new(Arc::clone(&monitor), window, cx))
-            })
-            .expect("failed to open taskbar widget");
+            spawn_widget_supervisor(Arc::new(PulseMonit::new()), cx);
         });
+}
+
+/// 部件窗口的守护任务。
+///
+/// 关键在于它是**应用级任务**（`App::spawn`），不挂在任何窗口上：所以部件窗口被
+/// 任务栏连带销毁之后，这个循环依然存活，每秒检查一次并把部件重新建出来。
+///
+/// 它依赖 `QuitMode::Explicit` —— 否则窗口销毁的瞬间 gpui 就已经退出进程，
+/// 这里根本没有机会运行。
+///
+/// 传感器线程由 `Arc<PulseMonit>` 持有，重建部件时复用同一个实例，
+/// 所以恢复是即时的，不会重新等 LHM 初始化。
+fn spawn_widget_supervisor(monitor: Arc<PulseMonit>, cx: &mut App) {
+    cx.spawn(async move |cx| {
+        let mut widget: Option<WindowHandle<TaskbarWidget>> = None;
+        loop {
+            // `update` 在实体或窗口已销毁时返回 Err，正好用来判断部件还在不在。
+            let alive = widget
+                .as_ref()
+                .is_some_and(|handle| handle.update(cx, |_, _, _| ()).is_ok());
+            if !alive {
+                widget = open_widget_window(Arc::clone(&monitor), cx);
+            }
+            cx.background_executor()
+                .timer(WIDGET_RECOVERY_INTERVAL)
+                .await;
+        }
+    })
+    .detach();
+}
+
+fn open_widget_window(
+    monitor: Arc<PulseMonit>,
+    cx: &mut AsyncApp,
+) -> Option<WindowHandle<TaskbarWidget>> {
+    cx.update(|cx| {
+        let bounds = widget_bounds(cx);
+        cx.open_window(widget_window_options(bounds), move |window, cx| {
+            Theme::sync_system_appearance(Some(window), cx);
+            cx.new(move |cx| TaskbarWidget::new(monitor, window, cx))
+        })
+    })
+    .ok()
 }
 
 fn widget_bounds(cx: &App) -> Bounds<Pixels> {

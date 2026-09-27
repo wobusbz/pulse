@@ -27,10 +27,7 @@ impl TaskbarWidget {
         });
 
         #[cfg(target_os = "windows")]
-        let taskbar_hwnd = crate::internal::taskbar::embed(window).or_else(|| {
-            cx.quit();
-            None
-        });
+        let taskbar_hwnd = crate::internal::taskbar::attach(window);
 
         cx.spawn(async move |this, cx| {
             loop {
