@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use gpui_kit::component::Theme;
 use gpui_kit::{actions, *};
@@ -16,6 +16,10 @@ const SCREEN_MARGIN: f32 = 8.0;
 
 /// 检查部件是否还活着、需要时把它重建出来的间隔。
 const WIDGET_RECOVERY_INTERVAL: Duration = Duration::from_secs(1);
+
+/// 传感器就绪后，再等这么久做第一次工作集整理并收紧上限
+/// （首帧渲染完成即可，尽早让启动期堆积的闲置页归位）。
+const WARMUP_TRIM_DELAY: Duration = Duration::from_secs(45);
 
 pub fn run() {
     // 先装 panic 日志：release 是 panic = "abort" 且无控制台，
@@ -45,6 +49,21 @@ pub fn run() {
             ]);
             cx.on_action(|_: &Quit, cx: &mut App| cx.quit());
 
+            // 调试辅助：`PULSE_QUIT_AFTER_SECS=N` 时 N 秒后自动退出
+            // （供剖析采集完成后让数据落盘，例如 dhat 堆剖析）。
+            if let Some(seconds) = std::env::var("PULSE_QUIT_AFTER_SECS")
+                .ok()
+                .and_then(|value| value.parse::<u64>().ok())
+            {
+                cx.spawn(async move |cx| {
+                    cx.background_executor()
+                        .timer(Duration::from_secs(seconds))
+                        .await;
+                    cx.update(|cx| cx.quit());
+                })
+                .detach();
+            }
+
             spawn_widget_supervisor(Arc::new(PulseMonit::new()), cx);
         });
 }
@@ -62,6 +81,8 @@ pub fn run() {
 fn spawn_widget_supervisor(monitor: Arc<PulseMonit>, cx: &mut App) {
     cx.spawn(async move |cx| {
         let mut widget: Option<WindowHandle<TaskbarWidget>> = None;
+        let mut ready_since: Option<Instant> = None;
+        let mut idle_settled = false;
         loop {
             // `update` 在实体或窗口已销毁时返回 Err，正好用来判断部件还在不在。
             let alive = widget
@@ -70,6 +91,24 @@ fn spawn_widget_supervisor(monitor: Arc<PulseMonit>, cx: &mut App) {
             if !alive {
                 widget = open_widget_window(Arc::clone(&monitor), cx);
             }
+
+            // 工作集：传感器就绪且预热一小段后，整理一次并收紧上限，
+            // 使数字稳定在低位（面板打开期间顺延）；面板关闭的收尾
+            // 通过 `memtrim::panel_closing()` 排定、这里每秒驱动执行。
+            if !idle_settled {
+                if ready_since.is_none() && monitor.snapshot().ready {
+                    ready_since = Some(Instant::now());
+                }
+                if let Some(since) = ready_since
+                    && since.elapsed() >= WARMUP_TRIM_DELAY
+                    && !crate::internal::memtrim::panel_is_open()
+                {
+                    crate::internal::memtrim::settle_idle();
+                    idle_settled = true;
+                }
+            }
+            crate::internal::memtrim::poll();
+
             cx.background_executor()
                 .timer(WIDGET_RECOVERY_INTERVAL)
                 .await;

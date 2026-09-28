@@ -13,6 +13,8 @@ use gpui_kit::*;
 
 pub(crate) struct ExpandPanel {
     monitor: Arc<PulseMonit>,
+    /// 上次触发重绘的传感器数据版本号；数据没变化时跳过每秒重绘。
+    last_revision: Option<u64>,
     autostart: Rc<Cell<bool>>,
     _activation_subscription: Subscription,
 }
@@ -26,7 +28,17 @@ impl ExpandPanel {
         cx.spawn(async move |this, cx| {
             loop {
                 cx.background_executor().timer(Duration::from_secs(1)).await;
-                if this.update(cx, |_, cx| cx.notify()).is_err() {
+                if this
+                    .update(cx, |this, cx| {
+                        // 只在传感器数据变化时重绘，避免每秒一次的无效渲染。
+                        let revision = this.monitor.revision();
+                        if this.last_revision != Some(revision) {
+                            this.last_revision = Some(revision);
+                            cx.notify();
+                        }
+                    })
+                    .is_err()
+                {
                     break;
                 }
             }
@@ -37,6 +49,8 @@ impl ExpandPanel {
         let activation_subscription = cx.observe_window_activation(window, move |_, window, cx| {
             let active = window.is_window_active();
             if was_active && !active {
+                // 面板即将因失焦关闭：安排收尾（窗口资源释放后整理并恢复上限）。
+                crate::internal::memtrim::panel_closing();
                 cx.spawn_in(window, async move |this, cx| {
                     cx.background_executor()
                         .timer(Duration::from_millis(100))
@@ -54,6 +68,7 @@ impl ExpandPanel {
 
         Self {
             monitor,
+            last_revision: None,
             autostart: Rc::new(Cell::new(crate::internal::autostart::is_enabled())),
             _activation_subscription: activation_subscription,
         }

@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
@@ -96,23 +96,27 @@ impl Metrics {
 pub(crate) struct PulseMonit {
     metrics: Arc<RwLock<Metrics>>,
     force_refresh: Arc<AtomicBool>,
+    revision: Arc<AtomicU64>,
 }
 
 impl PulseMonit {
     pub(crate) fn new() -> Self {
         let metrics = Arc::new(RwLock::new(Metrics::default()));
         let force_refresh = Arc::new(AtomicBool::new(false));
+        let revision = Arc::new(AtomicU64::new(0));
 
         let shared = Arc::clone(&metrics);
         let force = Arc::clone(&force_refresh);
+        let revision_counter = Arc::clone(&revision);
         std::thread::Builder::new()
             .name("pulse-monit".to_string())
-            .spawn(move || collect_loop(shared, force))
+            .spawn(move || collect_loop(shared, force, revision_counter))
             .expect("failed to spawn monitor thread");
 
         Self {
             metrics,
             force_refresh,
+            revision,
         }
     }
 
@@ -122,6 +126,11 @@ impl PulseMonit {
 
     pub(crate) fn refresh_now(&self) {
         self.force_refresh.store(true, Ordering::Relaxed);
+    }
+
+    /// 每次成功写入新指标后自增，供 UI 只在数据变化时重绘。
+    pub(crate) fn revision(&self) -> u64 {
+        self.revision.load(Ordering::Relaxed)
     }
 }
 
@@ -133,7 +142,11 @@ const WAIT_SLICE: Duration = Duration::from_millis(100);
 const SENSOR_FLAGS: u32 =
     flags::CPU | flags::GPU | flags::MEMORY | flags::STORAGE | flags::MOTHERBOARD;
 
-fn collect_loop(metrics: Arc<RwLock<Metrics>>, force_refresh: Arc<AtomicBool>) {
+fn collect_loop(
+    metrics: Arc<RwLock<Metrics>>,
+    force_refresh: Arc<AtomicBool>,
+    revision: Arc<AtomicU64>,
+) {
     let lhm = match Lhm::load_with_flags(dll_path(), SENSOR_FLAGS) {
         Ok(lhm) => lhm,
         Err(err) => {
@@ -159,6 +172,7 @@ fn collect_loop(metrics: Arc<RwLock<Metrics>>, force_refresh: Arc<AtomicBool>) {
             Ok(summary) => {
                 let snapshot = Metrics::from_summary(&summary);
                 *metrics.write().expect("monitor metrics poisoned") = snapshot;
+                revision.fetch_add(1, Ordering::Relaxed);
             }
             Err(err) => eprintln!("failed to read LHM snapshot: {err}"),
         }

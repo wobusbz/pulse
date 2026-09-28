@@ -10,6 +10,8 @@ use gpui_kit::*;
 
 pub(crate) struct TaskbarWidget {
     monitor: Arc<PulseMonit>,
+    /// 上次触发重绘的传感器数据版本号；数据没变化时跳过每秒重绘。
+    last_revision: Option<u64>,
     panel: Option<WindowHandle<ExpandPanel>>,
     _appearance_subscription: Subscription,
     #[cfg(target_os = "windows")]
@@ -38,7 +40,13 @@ impl TaskbarWidget {
                         if let Some(hwnd) = this.taskbar_hwnd {
                             crate::internal::taskbar::maintain(hwnd);
                         }
-                        cx.notify();
+                        // 只在传感器数据变化、或还在初始化（转圈动画）时重绘，
+                        // 避免每秒一次的无效渲染。
+                        let revision = this.monitor.revision();
+                        if !this.monitor.snapshot().ready || this.last_revision != Some(revision) {
+                            this.last_revision = Some(revision);
+                            cx.notify();
+                        }
                     })
                     .is_err()
                 {
@@ -50,6 +58,7 @@ impl TaskbarWidget {
 
         Self {
             monitor,
+            last_revision: None,
             panel: None,
             _appearance_subscription: appearance_subscription,
             #[cfg(target_os = "windows")]
@@ -68,6 +77,8 @@ impl TaskbarWidget {
                 .update(cx, |_, window, _| window.remove_window())
                 .is_ok()
         {
+            // 面板关闭：安排收尾（窗口资源释放后整理并恢复工作集上限）。
+            crate::internal::memtrim::panel_closing();
             cx.notify();
             return;
         }
@@ -92,6 +103,7 @@ impl TaskbarWidget {
             })
             .expect("failed to open panel window");
         self.panel = Some(panel);
+        crate::internal::memtrim::panel_opened();
         cx.notify();
     }
 }
