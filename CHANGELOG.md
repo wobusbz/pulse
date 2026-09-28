@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-09-27
+
 ### Fixed
 
 - **拖动详情面板导致进程静默崩溃**。拖动标题时用 `SendMessageW` 同步启动了 Windows 的模态移动循环，
@@ -45,5 +47,6 @@
 - 安装包随包携带 PawnIO 驱动安装器，系统未安装时以管理员权限静默安装
 - GitHub Actions：CI（fmt / check / clippy / test / build）与 Release（打 tag 触发打包发布）
 
-[Unreleased]: https://github.com/wobusbz/pulse/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/wobusbz/pulse/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/wobusbz/pulse/releases/tag/v0.1.1
 [0.1.0]: https://github.com/wobusbz/pulse/releases/tag/v0.1.0
